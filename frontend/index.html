@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FastAPI Frontend</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      max-width: 500px;
+      margin: auto;
+    }
+    input, button {
+      display: block;
+      margin: 10px 0;
+      padding: 8px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    pre {
+      background: #f0f0f0;
+      padding: 10px;
+      border-radius: 5px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h2>Login</h2>
+  <input type="text" id="username" placeholder="Username" />
+  <input type="password" id="password" placeholder="Password" />
+  <button onclick="login()">Login</button>
+
+  <h3>Actions</h3>
+  <button onclick="accessProtected()">Access /protected</button>
+  <button onclick="accessProtected2()">Access /protected2 (admin)</button>
+  <button onclick="logout()">Logout</button>
+
+  <h3>Response</h3>
+  <pre id="output">Not logged in.</pre>
+
+  <script>
+    const apiUrl = "/api"; // through nginx proxy
+
+    async function login() {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
+      try {
+        const res = await fetch(`${apiUrl}/token`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include", // important for cookies
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+        document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        document.getElementById("output").textContent = "Error: " + err.message;
+      }
+    }
+
+    async function accessProtected(path = "/protected") {
+      try {
+        const res = await fetch(`${apiUrl}${path}`, {
+          credentials: "include" // send the cookie
+        });
+
+        const data = await res.json();
+        document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        document.getElementById("output").textContent = "Error: " + err.message;
+      }
+    }
+
+    function accessProtected2() {
+      accessProtected("/protected2");
+    }
+
+    async function logout() {
+      try {
+        const res = await fetch(`${apiUrl}/logout`, {
+          method: "POST",
+          credentials: "include"
+        });
+
+        const data = await res.json();
+        document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+        document.getElementById("username").value = "";
+        document.getElementById("password").value = "";
+      } catch (err) {
+        document.getElementById("output").textContent = "Error: " + err.message;
+      }
+    }
+  </script>
+</body

@@ -1,0 +1,33 @@
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:80"  # exposed to host
+    depends_on:
+      - fastapi
+    networks:
+      - frontend-backend
+
+  fastapi:
+    build:
+      context: ./app
+    depends_on:
+      - memcached
+    networks:
+      - frontend-backend  # allow frontend to talk to FastAPI
+      - internal           # allow FastAPI to talk to Memcached
+
+  memcached:
+    image: memcached:latest
+    networks:
+      - internal
+    expose:
+      - "11211"  # internal only
+
+networks:
+  internal:
+    driver: bridge
+  frontend-backend:
+    driver: bridge
